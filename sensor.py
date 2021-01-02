@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import logging
 import string
 import requests
@@ -122,7 +123,6 @@ class BCHydroSensor(Entity):
 
     def update(self):
         # Todo: move this to an api in __init__.py
-        self._api.login()
         self._api.fetch_data()
 
 
@@ -134,7 +134,9 @@ class BCHydroApi:
         self._account_number = None
         self._slid = None
         self._cookies = None
+
         self.data = {"usage": [], "rates": {}}
+        self.last_fetch = None
 
     def call_api(self, method, url, **kwargs):
         payload = kwargs.get("params") or kwargs.get("data")
@@ -189,6 +191,11 @@ class BCHydroApi:
 
     def fetch_data(self):
         """Fetch new state data to store on the API"""
+        if self.last_fetch and (datetime.now() - self.last_fetch) < timedelta(seconds=60):
+            return self.data
+
+        self.login()
+
         response = self.call_api("get", URL_GET_USAGE)
         new_usage = []
 
@@ -232,6 +239,7 @@ class BCHydroApi:
             _LOGGER.error("Data reformatting error: %s", e)
             raise
 
+        self.last_fetch = datetime.now()
         return self.data
 
     def get_latest_usage(self):
