@@ -1,3 +1,6 @@
 __pycache__/
 .env
 tmp/
+
+# OSX
+.DS_Store
