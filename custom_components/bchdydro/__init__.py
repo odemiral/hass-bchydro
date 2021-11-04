@@ -1,1 +1,0 @@
-"""The BCHydro sensor integration."""
